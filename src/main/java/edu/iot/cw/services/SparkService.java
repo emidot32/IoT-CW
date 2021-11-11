@@ -1,4 +1,4 @@
-package edu.iot.cw.service;
+package edu.iot.cw.services;
 
 
 import org.apache.spark.api.java.JavaSparkContext;

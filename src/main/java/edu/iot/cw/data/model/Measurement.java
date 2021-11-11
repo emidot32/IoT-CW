@@ -1,4 +1,4 @@
-package edu.iot.cw.model;
+package edu.iot.cw.data.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
-
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -20,7 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @Table("measurements")
-public class Measurement {
+public class Measurement implements Serializable {
     @PrimaryKeyColumn(
             name = "id",
             ordinal = 2,

@@ -1,6 +1,6 @@
-package edu.iot.cw.repository;
+package edu.iot.cw.repositories;
 
-import edu.iot.cw.model.Measurement;
+import edu.iot.cw.data.model.Measurement;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package edu.iot.cw.config;
 
-import edu.iot.cw.repository.MeasurementRepository;
+import edu.iot.cw.repositories.MeasurementRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.cassandra.config.AbstractCassandraConfiguration;
@@ -36,7 +36,7 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
 
     @Override
     public String[] getEntityBasePackages() {
-        return new String[]{"edu.iot.cw.model"};
+        return new String[]{"edu.iot.cw.data.model"};
     }
 
 }
