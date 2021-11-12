@@ -2,6 +2,7 @@ package edu.iot.cw.config;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +21,14 @@ public class SparkConfig {
     }
 
     @Bean
-    public JavaSparkContext sc() {
+    public JavaSparkContext sparkContext() {
         return new JavaSparkContext(conf());
+    }
+
+    @Bean
+    public SparkSession sparkSession() {
+        return SparkSession.builder().
+                appName(appName).master(masterUri).getOrCreate();
     }
 
 }
