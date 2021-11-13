@@ -16,22 +16,18 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static edu.iot.cw.Constants.DATETIME_FORMAT;
+import static edu.iot.cw.data.Constants.DATETIME_FORMAT;
+import static edu.iot.cw.data.Constants.ONLY_HOUR_FORMAT;
 
 @Service
 public class CassandraService {
     @Autowired
     MeasurementRepository measurementRepository;
 
-    public List<Measurement> getAllMeasurements() {
-        return measurementRepository.findAll();
-    }
-
     public List<Measurement> getMeasurements(Date startDate, Date finishDate, String hour) {
         return measurementRepository.findAll().stream().parallel()
-                .filter(measurement -> measurement.getMesTimestamp().after(startDate)
-                        && measurement.getMesTimestamp().before(finishDate))
-                .filter(measurement -> DATETIME_FORMAT.format(measurement.getMesTimestamp()).equals(hour))
+                .filter(measurement -> isMesDateInRange(startDate, finishDate, measurement))
+                .filter(measurement -> isMesDateHourEqual(hour, measurement))
                 .collect(Collectors.toList());
     }
 
@@ -40,7 +36,6 @@ public class CassandraService {
         LocalDateTime ldtFinishDate = LocalDateTime.ofInstant(finishDate.toInstant(), ZoneId.systemDefault());
         Date startDate = Date.from(ldtFinishDate.minusDays(daysForDataset).atZone(ZoneId.systemDefault()).toInstant());
         return getMeasurements(startDate, finishDate, hour);
-
     }
 
     public void saveMeasurement(Measurement measurement) {
@@ -56,6 +51,22 @@ public class CassandraService {
                 .map(this::getMeasurement)
                 .forEach(this::saveMeasurement);
         return ResponseEntity.ok("Measurements are saved");
+    }
+
+    private boolean isMesDateInRange(Date startDate, Date finishDate, Measurement measurement) {
+        if (startDate != null && finishDate != null) {
+            return measurement.getMesTimestamp().after(startDate)
+                    && measurement.getMesTimestamp().before(finishDate);
+        } else if (startDate == null && finishDate != null) {
+            return measurement.getMesTimestamp().before(finishDate);
+        } else if (startDate != null && finishDate == null) {
+            return measurement.getMesTimestamp().after(startDate);
+        }
+        return true;
+    }
+
+    private boolean isMesDateHourEqual(String hour, Measurement measurement) {
+        return hour == null || ONLY_HOUR_FORMAT.format(measurement.getMesTimestamp()).equals(hour);
     }
 
     private Measurement getMeasurement(List<String> measurementValue) {
