@@ -82,4 +82,15 @@ public class CassandraService {
         }
     }
 
+    public List<Measurement> getMeasurements(String deviceId, Date startDate, Date finishDate) {
+        if (startDate == null && finishDate == null) {
+            return measurementRepository.findByDeviceId(deviceId);
+        } else if (startDate != null && finishDate != null) {
+            return measurementRepository.findByDeviceIdAndMesTimestampBetween(deviceId, startDate, finishDate);
+        } else if (startDate == null) {
+            return measurementRepository.findByDeviceIdAndMesTimestampBefore(deviceId, finishDate);
+        } else {
+            return measurementRepository.findByDeviceIdAndMesTimestampAfter(deviceId, startDate);
+        }
+    }
 }
