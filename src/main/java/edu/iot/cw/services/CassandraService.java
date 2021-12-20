@@ -11,9 +11,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static edu.iot.cw.data.Constants.DATETIME_FORMAT;
@@ -24,18 +22,34 @@ public class CassandraService {
     @Autowired
     MeasurementRepository measurementRepository;
 
-    public List<Measurement> getMeasurements(Date startDate, Date finishDate, String hour) {
-        return measurementRepository.findAll().stream().parallel()
-                .filter(measurement -> isMesDateInRange(startDate, finishDate, measurement))
+    final Map<String, MeasurementsGettingAction> METHODS_MAP = new HashMap<>() {{
+        put("000", (deviceId, startDate, finishDate) -> measurementRepository.findAll());
+        put("011", (deviceId, startDate, finishDate) -> measurementRepository.findByMesTimestampBetween(startDate, finishDate));
+        put("001", (deviceId, startDate, finishDate) -> measurementRepository.findByMesTimestampBefore(finishDate));
+        put("010", (deviceId, startDate, finishDate) -> measurementRepository.findByMesTimestampAfter(startDate));
+        put("100", (deviceId, startDate, finishDate) -> measurementRepository.findByDeviceId(deviceId));
+        put("111", (deviceId, startDate, finishDate) -> measurementRepository.findByDeviceIdAndMesTimestampBetween(deviceId, startDate, finishDate));
+        put("101", (deviceId, startDate, finishDate) -> measurementRepository.findByDeviceIdAndMesTimestampBefore(deviceId, finishDate));
+        put("110", (deviceId, startDate, finishDate) -> measurementRepository.findByDeviceIdAndMesTimestampAfter(deviceId, startDate));
+    }};
+    
+
+    public List<Measurement> getMeasurements(String deviceId, Date startDate, Date finishDate) {
+        String condition = isNotNullToString(deviceId) + isNotNullToString(startDate) + isNotNullToString(finishDate);
+        return METHODS_MAP.get(condition).get(deviceId, startDate, finishDate);
+    }
+
+    public List<Measurement> getMeasurements(String deviceId, Date startDate, Date finishDate, String hour) {
+        return getMeasurements(deviceId, startDate, finishDate).stream()
                 .filter(measurement -> isMesDateHourEqual(hour, measurement))
                 .collect(Collectors.toList());
     }
 
-    public List<Measurement> getMeasurementsForLastDays(int daysForDataset, String hour) {
+    public List<Measurement> getMeasurementsForLastDays(String deviceId, int daysForDataset, String hour) {
         Date finishDate = measurementRepository.getMaxDate().orElse(new Date());
         LocalDateTime ldtFinishDate = LocalDateTime.ofInstant(finishDate.toInstant(), ZoneId.systemDefault());
         Date startDate = Date.from(ldtFinishDate.minusDays(daysForDataset).atZone(ZoneId.systemDefault()).toInstant());
-        return getMeasurements(startDate, finishDate, hour);
+        return getMeasurements(deviceId, startDate, finishDate, hour);
     }
 
     public void saveMeasurement(Measurement measurement) {
@@ -51,18 +65,6 @@ public class CassandraService {
                 .map(this::getMeasurement)
                 .forEach(this::saveMeasurement);
         return ResponseEntity.ok("Measurements are saved");
-    }
-
-    private boolean isMesDateInRange(Date startDate, Date finishDate, Measurement measurement) {
-        if (startDate != null && finishDate != null) {
-            return measurement.getMesTimestamp().after(startDate)
-                    && measurement.getMesTimestamp().before(finishDate);
-        } else if (startDate == null && finishDate != null) {
-            return measurement.getMesTimestamp().before(finishDate);
-        } else if (startDate != null && finishDate == null) {
-            return measurement.getMesTimestamp().after(startDate);
-        }
-        return true;
     }
 
     private boolean isMesDateHourEqual(String hour, Measurement measurement) {
@@ -82,15 +84,7 @@ public class CassandraService {
         }
     }
 
-    public List<Measurement> getMeasurements(String deviceId, Date startDate, Date finishDate) {
-        if (startDate == null && finishDate == null) {
-            return measurementRepository.findByDeviceId(deviceId);
-        } else if (startDate != null && finishDate != null) {
-            return measurementRepository.findByDeviceIdAndMesTimestampBetween(deviceId, startDate, finishDate);
-        } else if (startDate == null) {
-            return measurementRepository.findByDeviceIdAndMesTimestampBefore(deviceId, finishDate);
-        } else {
-            return measurementRepository.findByDeviceIdAndMesTimestampAfter(deviceId, startDate);
-        }
+    private String isNotNullToString(Object obj) {
+        return obj == null ? "0" : "1";
     }
 }

@@ -38,7 +38,7 @@ public class MeasurementsController {
                                              @RequestParam(name="finish_date", required = false)
                                              @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date finishDate,
                                              @RequestParam(name="hour", required = false) String hour) {
-        return cassandraService.getMeasurements(startDate, finishDate, hour);
+        return cassandraService.getMeasurements(null, startDate, finishDate, hour);
     }
 
     @GetMapping("/{deviceId}")
@@ -46,7 +46,8 @@ public class MeasurementsController {
                                                    @RequestParam(name="start_date", required = false)
                                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
                                                    @RequestParam(name="finish_date", required = false)
-                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date finishDate) {
-        return cassandraService.getMeasurements(deviceId, startDate, finishDate);
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date finishDate,
+                                                   @RequestParam(name="hour", required = false) String hour) {
+        return cassandraService.getMeasurements(deviceId, startDate, finishDate, hour);
     }
 }

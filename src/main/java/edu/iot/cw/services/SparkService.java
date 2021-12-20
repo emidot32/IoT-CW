@@ -2,16 +2,18 @@ package edu.iot.cw.services;
 
 
 import edu.iot.cw.data.Values;
+import edu.iot.cw.data.dtos.MeanValues;
 import edu.iot.cw.data.model.Measurement;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 
 @Service
-public class SparkService implements Serializable {
+public class SparkService {
     @Autowired
     CassandraService cassandraService;
 
@@ -28,28 +30,18 @@ public class SparkService implements Serializable {
                 : measurement.getHumidity();
     }
 
+    public MeanValues getMeanValues(String deviceId, Date startDate, Date finishDate, String hour) {
+        List<Measurement> measurements = cassandraService.getMeasurements(deviceId, startDate, finishDate, hour);
+        return MeanValues.builder()
+                .meanTemp(getMeanValue(measurements, Values.TEMPERATURE))
+                .meanHum(getMeanValue(measurements, Values.HUMIDITY))
+                .build();
+    }
 
-//    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(Constants.DATETIME_FORMAT);
-//
-//    public ResponseEntity<String> saveMeasurements(MeasurementValues measurementValues) {
-//        JavaRDD<List<String>> measurementsRDD = sc.parallelize(measurementValues.getValues());
-//        measurementsRDD
-//                  .map(this::getMeasurement)
-//                  .foreach(measurement -> cassandraService.saveMeasurement(measurement));
-//        return ResponseEntity.ok("Measurements are saved");
-//    }
-//
-//    private Measurement getMeasurement(List<String> measurementValue) {
-//        try {
-//            return Measurement.builder()
-//                    .deviceId(measurementValue.get(0))
-//                    .temperature(Float.valueOf(measurementValue.get(1)))
-//                    .humidity(Float.valueOf(measurementValue.get(2)))
-//                    .mesTimestamp(simpleDateFormat.parse(measurementValue.get(3)))
-//                    .build();
-//        } catch (ParseException e) {
-//            throw new BigDataRuntimeException(e.getMessage());
-//        }
-//    }
+    private Double getMeanValue(List<Measurement> measurements, Values neededValue) {
+        return measurements.stream().parallel()
+                .mapToDouble(measurement -> getNeededValue(neededValue, measurement))
+                .average().orElse(0.0);
+    }
 
 }

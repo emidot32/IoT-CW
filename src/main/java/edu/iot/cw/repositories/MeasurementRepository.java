@@ -6,12 +6,13 @@ import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MeasurementRepository extends CassandraRepository<Measurement, Long> {
+public interface MeasurementRepository extends CassandraRepository<Measurement, Long>, Serializable {
     @Query(value = "select max(mes_timestamp) from measurements;")
     Optional<Date> getMaxDate();
 
@@ -22,8 +23,18 @@ public interface MeasurementRepository extends CassandraRepository<Measurement, 
     List<Measurement> findByDeviceIdAndMesTimestampBetween(String deviceId, Date startDate, Date finishDate);
 
     @AllowFiltering
+    List<Measurement> findByMesTimestampBetween(Date startDate, Date finishDate);
+
+    @AllowFiltering
     List<Measurement> findByDeviceIdAndMesTimestampBefore(String deviceId, Date finishDate);
 
     @AllowFiltering
+    List<Measurement> findByMesTimestampBefore(Date finishDate);
+
+    @AllowFiltering
     List<Measurement> findByDeviceIdAndMesTimestampAfter(String deviceId, Date startDate);
+
+    @AllowFiltering
+    List<Measurement> findByMesTimestampAfter(Date startDate);
+
 }

@@ -30,8 +30,9 @@ public class RegressionService extends SparkService {
     @Value("${daysForDataset}")
     int daysForDataset;
 
-    public Prediction getPrediction(int days, String hour) {
-        List<Measurement> measurements = cassandraService.getMeasurementsForLastDays(daysForDataset, hour).stream()
+    public Prediction getPrediction(String deviceId, int days, String hour) {
+        List<Measurement> measurements = cassandraService.getMeasurementsForLastDays(deviceId, daysForDataset, hour)
+                .stream()
                 .sorted(Comparator.comparing(Measurement::getMesTimestamp))
                 .collect(Collectors.toList());
         return Prediction.builder()
