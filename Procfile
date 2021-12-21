@@ -1,0 +1,1 @@
+web: java -Xmx500m -jar target/cw-0.0.1-SNAPSHOT.jar
