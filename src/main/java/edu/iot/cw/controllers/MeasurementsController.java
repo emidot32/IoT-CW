@@ -4,11 +4,13 @@ import edu.iot.cw.data.dtos.MeasurementValues;
 import edu.iot.cw.data.model.Measurement;
 import edu.iot.cw.services.CassandraService;
 import edu.iot.cw.services.SparkService;
+import edu.iot.cw.services.TestDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -22,9 +24,17 @@ public class MeasurementsController {
     @Autowired
     CassandraService cassandraService;
 
+    @Autowired
+    TestDataService testDataService;
+
     @PostMapping("/measurement")
     public void saveMeasurement(@RequestBody Measurement measurement) {
         cassandraService.saveMeasurement(measurement);
+    }
+
+    @PostMapping("test-data")
+    public void createTestData(@RequestParam(name="device_num") int deviceNum) throws ParseException {
+        testDataService.createTestData(deviceNum);
     }
 
     @PostMapping
